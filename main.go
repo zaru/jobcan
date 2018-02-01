@@ -40,16 +40,18 @@ func main() {
 
 	app.Action = func(c *cli.Context) error {
 		if c.String("client_id") == "" {
-			log.Fatal("client_id is required")
+			return cli.NewExitError("client_id is required", 1)
 		}
 		if c.String("login_id") == "" {
-			log.Fatal("login_id is required")
+			return cli.NewExitError("login_id is required", 1)
+
 		}
 		if c.String("password") == "" {
-			log.Fatal("password is required")
+			return cli.NewExitError("password is required", 1)
+
 		}
 		if c.String("mode") == "" {
-			log.Fatal("mode is required. work_start or work_end")
+			return cli.NewExitError("mode is required. work_start or work_end", 1)
 		}
 
 		jar, err := cookiejar.New(nil)
