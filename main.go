@@ -61,8 +61,8 @@ func main() {
 
 		client := &http.Client{Jar: jar}
 		login(client, c.String("client_id"), c.String("login_id"), c.String("password"))
-		token, group_id := fetchTokenAndGroup(client)
-		pushDakoku(client, c.String("mode"), token, group_id)
+		token, groupID := fetchTokenAndGroup(client)
+		pushDakoku(client, c.String("mode"), token, groupID)
 
 		fmt.Println("done!")
 		fmt.Println("see https://ssl.jobcan.jp/employee/")
@@ -73,10 +73,10 @@ func main() {
 
 }
 
-func login(client *http.Client, client_id, login_id, password string) {
+func login(client *http.Client, clientID, loginID, password string) {
 	values := url.Values{}
-	values.Add("client_login_id", client_id)
-	values.Add("client_manager_login_id", login_id)
+	values.Add("client_login_id", clientID)
+	values.Add("client_manager_login_id", loginID)
 	values.Add("client_login_password", password)
 	values.Add("login_type", "2")
 	values.Add("url", "https://ssl.jobcan.jp/client/")
@@ -121,13 +121,13 @@ func employeeLogin(client *http.Client) {
 	}
 }
 
-func pushDakoku(client *http.Client, mode string, token string, group_id string) {
+func pushDakoku(client *http.Client, mode string, token string, groupID string) {
 	values := url.Values{}
 	values.Add("is_yakin", "0")
 	values.Add("adit_item", mode)
 	values.Add("notice", "")
 	values.Add("token", token)
-	values.Add("adit_group_id", group_id)
+	values.Add("adit_groupID", groupID)
 	res, err := client.PostForm("https://ssl.jobcan.jp/employee/index/adit", values)
 	if err != nil {
 		log.Fatal(err)
@@ -149,6 +149,6 @@ func fetchTokenAndGroup(client *http.Client) (string, string) {
 
 	doc, _ := goquery.NewDocumentFromReader(res.Body)
 	token, _ := doc.Find("input[name='token']").Attr("value")
-	group_id, _ := doc.Find("select#adit_group_id option:first-child").Attr("value")
-	return token, group_id
+	groupID, _ := doc.Find("select#adit_groupID option:first-child").Attr("value")
+	return token, groupID
 }
