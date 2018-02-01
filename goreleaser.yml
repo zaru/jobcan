@@ -1,0 +1,12 @@
+builds:
+  - binary: jobcan
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  - binary: jobcan
+    main: main.go
+    goos:
+      - darwin
+    goarch:
+      - amd64
