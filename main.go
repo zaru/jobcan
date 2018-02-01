@@ -1,76 +1,117 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"os/user"
 	"regexp"
+	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/Songmu/prompter"
 	"github.com/urfave/cli"
 )
+
+// Config is command parameters
+type Config struct {
+	Credential CredentialConfig
+}
+
+// CredentialConfig is jobcan credential
+type CredentialConfig struct {
+	ClientID string
+	LoginID  string
+	Password string
+}
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "jobcan"
 	app.Usage = "attendance operation command for jobcan"
 	app.Version = "0.1.1"
+	app.Commands = []cli.Command{
+		{
+			Name:  "init",
+			Usage: "initialize to jobcan account",
+			Action: func(c *cli.Context) error {
 
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "client_id, c",
-			Usage: "client id",
+				var config Config
+				var credentialConfig CredentialConfig
+				credentialConfig.ClientID = prompter.Prompt("Enter your client ID", "")
+				credentialConfig.LoginID = prompter.Prompt("Enter your login ID", "")
+				credentialConfig.Password = prompter.Prompt("Enter your password", "")
+				config.Credential = credentialConfig
+
+				var buffer bytes.Buffer
+				encoder := toml.NewEncoder(&buffer)
+				_ = encoder.Encode(config)
+
+				ioutil.WriteFile(configPath(), []byte(buffer.String()), os.ModePerm)
+				return nil
+			},
 		},
-		cli.StringFlag{
-			Name:  "login_id, l",
-			Usage: "login id",
+		{
+			Name:  "start",
+			Usage: "I will start a job.",
+			Action: func(c *cli.Context) error {
+				err := execAttendance("work_start")
+				if err != nil {
+					return cli.NewExitError(err, 1)
+				}
+				return nil
+			},
 		},
-		cli.StringFlag{
-			Name:  "password, p",
-			Usage: "password",
+		{
+			Name:  "end",
+			Usage: "Today's work is over!",
+			Action: func(c *cli.Context) error {
+				err := execAttendance("work_end")
+				if err != nil {
+					return cli.NewExitError(err, 1)
+				}
+				return nil
+			},
 		},
-		cli.StringFlag{
-			Name:  "mode, m",
-			Usage: "work_start or work_end",
-		},
-	}
-
-	app.Action = func(c *cli.Context) error {
-		if c.String("client_id") == "" {
-			return cli.NewExitError("client_id is required", 1)
-		}
-		if c.String("login_id") == "" {
-			return cli.NewExitError("login_id is required", 1)
-
-		}
-		if c.String("password") == "" {
-			return cli.NewExitError("password is required", 1)
-
-		}
-		if c.String("mode") == "" {
-			return cli.NewExitError("mode is required. work_start or work_end", 1)
-		}
-
-		jar, err := cookiejar.New(nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		client := &http.Client{Jar: jar}
-		login(client, c.String("client_id"), c.String("login_id"), c.String("password"))
-		token, groupID := fetchTokenAndGroup(client)
-		pushDakoku(client, c.String("mode"), token, groupID)
-
-		fmt.Println("done!")
-		fmt.Println("see https://ssl.jobcan.jp/employee/")
-		return nil
 	}
 
 	app.Run(os.Args)
 
+}
+
+func configPath() string {
+	// only OSX
+	usr, _ := user.Current()
+	return strings.Replace("~/.jobcan", "~", usr.HomeDir, 1)
+}
+
+func execAttendance(mode string) error {
+	var config Config
+
+	_, err := toml.DecodeFile(configPath(), &config)
+	if err != nil {
+		return fmt.Errorf("Config file is broken ;; please try `jobcan init`.")
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := &http.Client{Jar: jar}
+	login(client, config.Credential.ClientID, config.Credential.LoginID, config.Credential.Password)
+	token, groupID := fetchTokenAndGroup(client)
+	pushDakoku(client, mode, token, groupID)
+
+	fmt.Println("done!")
+	fmt.Println("see https://ssl.jobcan.jp/employee/")
+
+	return nil
 }
 
 func login(client *http.Client, clientID, loginID, password string) {
