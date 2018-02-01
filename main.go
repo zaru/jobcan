@@ -15,6 +15,9 @@ import (
 
 func main() {
 	app := cli.NewApp()
+	app.Name = "jobcan"
+	app.Usage = "attendance operation command for jobcan"
+	app.Version = "0.1.1"
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

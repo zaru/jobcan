@@ -10,3 +10,18 @@ builds:
       - darwin
     goarch:
       - amd64
+brew:
+  github:
+    owner: zaru
+    name: homebrew-jobcan
+  commit_author:
+    name: zaru
+    email: zarutofu@gmail.com
+  description: "jobcan cli"
+  homepage: "https://github.com/zaru/jobcan"
+  dependencies:
+    - fzf
+  install: |
+    bin.install 'jobcan'
+  test: |
+    system "#{bin}/jobcan"
