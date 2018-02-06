@@ -16,6 +16,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/Songmu/prompter"
+	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
 )
 
@@ -35,7 +36,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "jobcan"
 	app.Usage = "attendance operation command for jobcan"
-	app.Version = "0.1.1"
+	app.Version = "0.2.1"
 	app.Commands = []cli.Command{
 		{
 			Name:  "init",
@@ -79,10 +80,26 @@ func main() {
 				return nil
 			},
 		},
+		{
+			Name:  "list",
+			Usage: "Get your attendance list",
+			Action: func(c *cli.Context) error {
+				err := execGetAttendance()
+				if err != nil {
+					return cli.NewExitError(err, 1)
+				}
+				return nil
+			},
+		},
 	}
 
 	app.Run(os.Args)
 
+}
+
+func trimMetaChars(str string) string {
+	r := strings.NewReplacer("\n", "", "\t", "", " ", "")
+	return r.Replace(str)
 }
 
 func configPath() string {
@@ -110,6 +127,60 @@ func execAttendance(mode string) error {
 
 	fmt.Println("done!")
 	fmt.Println("see https://ssl.jobcan.jp/employee/")
+
+	return nil
+}
+
+func execGetAttendance() error {
+	var config Config
+
+	_, err := toml.DecodeFile(configPath(), &config)
+	if err != nil {
+		return fmt.Errorf("Config file is broken ;; please try `jobcan init`.")
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := &http.Client{Jar: jar}
+	login(client, config.Credential.ClientID, config.Credential.LoginID, config.Credential.Password)
+
+	res, err := client.Get("https://ssl.jobcan.jp/employee/attendance")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	table := tablewriter.NewWriter(os.Stdout)
+
+	doc, _ := goquery.NewDocumentFromReader(res.Body)
+
+	head := []string{}
+	doc.Find(".note tbody tr:first-child th").Each(func(i int, s *goquery.Selection) {
+		head = append(head, trimMetaChars(s.Text()))
+	})
+	table.SetHeader(head)
+
+	len := doc.Find(".note tbody tr").Size() - 1
+	doc.Find(".note tbody tr").Each(func(i int, s *goquery.Selection) {
+		if i < len {
+			data := []string{}
+			s.Find("td,th").Each(func(i int, s *goquery.Selection) {
+				data = append(data, trimMetaChars(s.Text()))
+			})
+			table.Append(data)
+		}
+
+	})
+
+	foot := []string{}
+	doc.Find(".note tbody tr:last-child th, .note tbody tr:last-child td").Each(func(i int, s *goquery.Selection) {
+		foot = append(foot, trimMetaChars(s.Text()))
+	})
+	table.SetFooter(foot)
+
+	table.Render()
 
 	return nil
 }
