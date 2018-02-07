@@ -41,7 +41,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "init",
-			Usage: "initialize to jobcan account",
+			Usage: "jobcan init / initialize to jobcan account",
 			Action: func(c *cli.Context) error {
 
 				var config Config
@@ -61,7 +61,7 @@ func main() {
 		},
 		{
 			Name:  "start",
-			Usage: "I will start a job.",
+			Usage: "jobcan start / I will start a job.",
 			Action: func(c *cli.Context) error {
 				err := execAttendance("work_start")
 				if err != nil {
@@ -72,7 +72,7 @@ func main() {
 		},
 		{
 			Name:  "end",
-			Usage: "Today's work is over!",
+			Usage: "jobcan end / Today's work is over!",
 			Action: func(c *cli.Context) error {
 				err := execAttendance("work_end")
 				if err != nil {
@@ -83,7 +83,7 @@ func main() {
 		},
 		{
 			Name:  "list",
-			Usage: "Get your attendance list",
+			Usage: "jobcan list / Get your attendance list",
 			Action: func(c *cli.Context) error {
 				err := execGetAttendance()
 				if err != nil {
