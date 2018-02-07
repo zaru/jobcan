@@ -26,6 +26,12 @@
   revision = "349dd0209470eabd9514242c688c403c0926d266"
 
 [[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
@@ -36,6 +42,12 @@
   packages = ["."]
   revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
   version = "v0.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mgutz/ansi"
+  packages = ["."]
+  revision = "9520e82c474b0a04dd04f8a40959027271bab992"
 
 [[projects]]
   branch = "master"
@@ -58,18 +70,34 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["html","html/atom"]
+  packages = [
+    "html",
+    "html/atom"
+  ]
   revision = "309822c5b9b9f80db67f016069a12628d94fad34"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "3dbebcf8efb6a5011a60c2b4591c1022a759af8a"
+
+[[projects]]
+  name = "gopkg.in/AlecAivazis/survey.v1"
+  packages = [
+    ".",
+    "core",
+    "terminal"
+  ]
+  revision = "0aa8b6a162b391fe2d95648b7677d1d6ac2090a6"
+  version = "v1.4.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "24684baeda0af7428ed7fcd11c7a825b12a2b25308f55285fd0fb82715489c4f"
+  inputs-digest = "eb29ec1dae1872b38c11ec244650d28610e7ab065aec18ffc1bfcc61771ad973"
   solver-name = "gps-cdcl"
   solver-version = 1
