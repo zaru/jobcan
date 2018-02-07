@@ -37,7 +37,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "jobcan"
 	app.Usage = "attendance operation command for jobcan"
-	app.Version = "0.2.2"
+	app.Version = "0.2.3"
 	app.Commands = []cli.Command{
 		{
 			Name:  "init",
@@ -359,7 +359,6 @@ func sendFixTime(client *http.Client, params FixTimeParams) {
 	values.Add("day", params.Day)
 	values.Add("client_id", params.ClientId)
 	values.Add("employee_id", params.EmployeeId)
-	fmt.Println(values)
 	res, err := client.PostForm("https://ssl.jobcan.jp/employee/adit/insert/", values)
 	if err != nil {
 		log.Fatal(err)
