@@ -37,7 +37,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "jobcan"
 	app.Usage = "attendance operation command for jobcan"
-	app.Version = "0.2.1"
+	app.Version = "0.2.2"
 	app.Commands = []cli.Command{
 		{
 			Name:  "init",
