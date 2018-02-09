@@ -10,6 +10,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/Songmu/prompter"
+	"github.com/zaru/jobcan/types"
 )
 
 // Config is command parameters
@@ -19,9 +20,10 @@ type Config struct {
 
 // CredentialConfig is jobcan credential
 type CredentialConfig struct {
-	ClientID string
-	LoginID  string
-	Password string
+	ClientID    string
+	LoginID     string
+	Password    string
+	AccountType string
 }
 
 func configPath() string {
@@ -31,8 +33,11 @@ func configPath() string {
 }
 
 func Init() {
+	ac := []string{types.Admin, types.Staff}
+
 	var config Config
 	var credentialConfig CredentialConfig
+	credentialConfig.AccountType = prompter.Choose("Choose your account type", ac, types.Staff)
 	credentialConfig.ClientID = prompter.Prompt("Enter your client ID", "")
 	credentialConfig.LoginID = prompter.Prompt("Enter your login ID", "")
 	credentialConfig.Password = prompter.Prompt("Enter your password", "")

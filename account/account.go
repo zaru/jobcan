@@ -13,17 +13,11 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/zaru/jobcan/client"
 	"github.com/zaru/jobcan/config"
+	"github.com/zaru/jobcan/types"
 	"gopkg.in/AlecAivazis/survey.v1"
 )
 
-type AccountType int
-
-const (
-	General = iota
-	Admin
-)
-
-func New(at AccountType) Account {
+func New() Account {
 
 	config, err := config.Read()
 	if err != nil {
@@ -38,11 +32,11 @@ func New(at AccountType) Account {
 		password:   config.Credential.Password,
 		httpClient: httpClient,
 	}
-	if at == Admin {
+	if config.Credential.AccountType == types.Admin {
 		return &admin{u}
 	}
 
-	return &admin{u}
+	return &staff{u}
 }
 
 type Account interface {
@@ -68,6 +62,10 @@ type user struct {
 }
 
 type admin struct {
+	*user
+}
+
+type staff struct {
 	*user
 }
 

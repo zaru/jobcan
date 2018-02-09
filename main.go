@@ -12,7 +12,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "jobcan"
 	app.Usage = "attendance operation command for jobcan"
-	app.Version = "0.2.4"
+	app.Version = "0.3.0"
 	app.Commands = []cli.Command{
 		{
 			Name:  "init",
@@ -26,7 +26,7 @@ func main() {
 			Name:  "start",
 			Usage: "jobcan start / I will start a job.",
 			Action: func(c *cli.Context) error {
-				a := account.New(account.Admin)
+				a := account.New()
 				a.Login()
 				a.ExecAttendance("work_start")
 				return nil
@@ -36,7 +36,7 @@ func main() {
 			Name:  "end",
 			Usage: "jobcan end / Today's work is over!",
 			Action: func(c *cli.Context) error {
-				a := account.New(account.Admin)
+				a := account.New()
 				a.Login()
 				a.ExecAttendance("work_end")
 				return nil
@@ -46,7 +46,7 @@ func main() {
 			Name:  "list",
 			Usage: "jobcan list / Get your attendance list",
 			Action: func(c *cli.Context) error {
-				a := account.New(account.Admin)
+				a := account.New()
 				a.Login()
 				err := a.ExecGetAttendance()
 				if err != nil {
@@ -59,7 +59,7 @@ func main() {
 			Name:  "show",
 			Usage: "jobcan show [YYYYMMDD] / Show and fix time work for the specified day.",
 			Action: func(c *cli.Context) error {
-				a := account.New(account.Admin)
+				a := account.New()
 				a.Login()
 				err := a.ExecGetAttendanceByDay(c.Args().First())
 				if err != nil {
