@@ -68,6 +68,19 @@ func main() {
 				return nil
 			},
 		},
+		{
+			Name:  "manhour",
+			Usage: "jobcan manhour [YYYYMM] / Show and fix man-hour management.",
+			Action: func(c *cli.Context) error {
+				a := account.New()
+				a.Login()
+				err := a.ExecGetManHour(c.Args().First())
+				if err != nil {
+					return cli.NewExitError(err, 1)
+				}
+				return nil
+			},
+		},
 	}
 
 	app.Run(os.Args)

@@ -44,6 +44,7 @@ type Account interface {
 	ExecAttendance(mode string)
 	ExecGetAttendance() error
 	ExecGetAttendanceByDay(day string) error
+	ExecGetManHour(date string) error
 
 	promptFix() bool
 	promptChooseTime(targetTimeLists map[string]string) string
