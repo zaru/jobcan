@@ -113,9 +113,8 @@ func (u *user) ExecGetAttendance() error {
 	})
 	table.SetHeader(head)
 
-	len := doc.Find(".note tbody tr").Size() - 1
 	doc.Find(".note tbody tr").Each(func(i int, s *goquery.Selection) {
-		if i < len {
+		if i > 0 {
 			data := []string{}
 			s.Find("td,th").Each(func(i int, s *goquery.Selection) {
 				data = append(data, trimMetaChars(s.Text()))
