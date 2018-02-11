@@ -1,21 +1,28 @@
 package account
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/olekukonko/tablewriter"
+	"gopkg.in/AlecAivazis/survey.v1"
 )
 
 func (u *user) ExecGetManHour(day string) error {
 	r := regexp.MustCompile(`([0-9]{4})-?([0-9]{2})`)
 	result := r.FindAllStringSubmatch(day, -1)
 
+	year := strconv.Itoa(time.Now().Year())
+
 	values := url.Values{}
 	if len(result) > 0 {
+		year = result[0][1]
 		values.Add("year", result[0][1])
 		values.Add("month", result[0][2])
 	}
@@ -40,12 +47,16 @@ func (u *user) ExecGetManHour(day string) error {
 	})
 	table.SetHeader(head)
 
+	targetDayLists := []string{"cancel"}
 	doc.Find(".man-hour-table tbody tr").Each(func(i int, s *goquery.Selection) {
 		if i > 0 {
 			data := []string{}
 			s.Find("td,th").Each(func(i int, s *goquery.Selection) {
 				if i < maxColumn {
-					data = append(data, trimMetaChars(s.Text()))
+					data = append(data, year+"/"+trimMetaChars(s.Text()))
+				}
+				if i == 0 {
+					targetDayLists = append(targetDayLists, year+"/"+trimMetaChars(s.Text()))
 				}
 			})
 			table.Append(data)
@@ -55,5 +66,30 @@ func (u *user) ExecGetManHour(day string) error {
 
 	table.Render()
 
+	fixFlag := u.promptFix()
+	if fixFlag == false {
+		return nil
+	}
+
+	chooseDay := u.promptChooseDay(targetDayLists)
+	fmt.Println(chooseDay)
+
 	return nil
+}
+
+func (u *user) promptChooseDay(targetDayLists []string) int64 {
+	targetTime := ""
+	prompt := &survey.Select{
+		Message: "Choose a time:",
+		Options: targetDayLists,
+	}
+	survey.AskOne(prompt, &targetTime, nil)
+	return strToUnixTime(targetTime)
+}
+
+func strToUnixTime(str string) int64 {
+	r := regexp.MustCompile(`([0-9]{4}/[0-9]{2}/[0-9]{2})`)
+	result := r.FindAllStringSubmatch(str, -1)
+	t, _ := time.Parse("2006/01/02", result[0][1])
+	return t.Unix()
 }
