@@ -71,20 +71,42 @@ func (u *user) ExecGetManHour(day string) error {
 		return nil
 	}
 
-	chooseDay := u.promptChooseDay(targetDayLists)
+	chooseDay := promptChooseDay(targetDayLists)
 	fmt.Println(chooseDay)
+
+	doc = u.fetchManHourFormDoc(chooseDay)
+	token, projects := fetchManHourTokenAndProjects(doc)
+	project := promptChooseProject(projects)
+	tasks := fetchManHourTasks(doc, projects[project])
+	fmt.Println(token)
+	fmt.Println(project)
+	fmt.Println(tasks)
 
 	return nil
 }
 
-func (u *user) promptChooseDay(targetDayLists []string) int64 {
+func promptChooseDay(targetDayLists []string) string {
 	targetTime := ""
 	prompt := &survey.Select{
 		Message: "Choose a time:",
 		Options: targetDayLists,
 	}
 	survey.AskOne(prompt, &targetTime, nil)
-	return strToUnixTime(targetTime)
+	return strconv.FormatInt(strToUnixTime(targetTime), 10)
+}
+
+func promptChooseProject(projects map[string]string) string {
+	var targetProject string
+	keys := make([]string, 0, len(projects))
+	for k := range projects {
+		keys = append(keys, k)
+	}
+	prompt := &survey.Select{
+		Message: "Choose a project:",
+		Options: keys,
+	}
+	survey.AskOne(prompt, &targetProject, nil)
+	return targetProject
 }
 
 func strToUnixTime(str string) int64 {
@@ -92,4 +114,55 @@ func strToUnixTime(str string) int64 {
 	result := r.FindAllStringSubmatch(str, -1)
 	t, _ := time.Parse("2006/01/02", result[0][1])
 	return t.Unix()
+}
+
+type ManHourForm struct {
+	Error bool   `json:"error"`
+	Html  string `json:"html"`
+}
+
+func (u *user) fetchManHourFormDoc(ts string) *goquery.Document {
+	res, err := u.httpClient.Get("https://ssl.jobcan.jp/employee/man-hour-manage/get-man-hour-data-for-edit/unix_time/" + ts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	doc, _ := goquery.NewDocumentFromReader(res.Body)
+	return doc
+}
+
+func fetchManHourTokenAndProjects(doc *goquery.Document) (string, map[string]string) {
+	token, _ := doc.Find("").Attr("value")
+
+	projects := map[string]string{}
+	doc.Find("select[name='projects[]'] option").Each(func(i int, s *goquery.Selection) {
+		val, _ := s.Attr("value")
+		projects[s.Text()] = val
+	})
+	return token, projects
+}
+
+func fetchManHourTasks(doc *goquery.Document, projectID string) map[string]string {
+	projects := map[string]string{}
+	doc.Find("#task-list-" + projectID + " option").Each(func(i int, s *goquery.Selection) {
+		val, _ := s.Attr("value")
+		projects[s.Text()] = val
+	})
+	return projects
+}
+
+func (u *user) pushManHour(token string) {
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("template", "")
+	res, err := u.httpClient.PostForm("https://ssl.jobcan.jp/employee/index/adit", values)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Fatal("Post error StatusCode=" + string(res.StatusCode))
+		return
+	}
 }
